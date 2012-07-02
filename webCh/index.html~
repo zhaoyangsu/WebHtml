@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>/我的文档/</title>
+    <link rel="stylesheet" href="ServerPage.css" type="text/css" />
+    
+
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="swfupload.js"></script>
+	<script type="text/javascript" src="swfupload.swfobject.js"></script>
+	<script type="text/javascript" src="swfupload.queue.js"></script>
+	<script type="text/javascript" src="swffileprogress.js"></script>
+	<script type="text/javascript" src="swfhandlers.js"></script>
+	<script type="text/javascript" src="fileshare.js"></script>
+
+    <script type="text/javascript">
+
+        var currentUrlPath;
+        var filePath;
+        var cookieName = "tempPath";
+        
+        function setCookie(name, value)
+        {
+            if (null == value||
+                "" == value)
+            {
+                value = "/";
+            }
+            document.cookie = name + "=" + escape(value);
+        }
+        
+        function getCookie(name)
+        {
+            var arr = document.cookie.match(new RegExp("(^|)"+name+"=([^;]*)(;|$)"));
+            if (arr != null && arr[2] != "") return unescape(arr[2]);
+            return "/";
+        }
+			
+function initTable(aFilePath)
+		{
+			$.ajax({
+            cache: false,
+			type: "GET",
+			url: "/(-xml-)",
+			data: "filePath="+aFilePath,
+   					
+			success: function(xml) {
+			$("#fileList").empty();
+			$("#filelist").append('<tr>'+
+                            '<td class="fileName" height="3px"></td>'+
+                   				'<td class="fileLastMod"></td>'+
+                   				'<td class="fileSize" align="right"></td>'+
+                			'</tr>')
+			filePath = $(xml).find("FilePath").text();
+			currentUrlPath = filePath;
+            initSwfUpload( filePath, "");
+            setCookie(cookieName, currentUrlPath);
+			$("#documentPath222").text(filePath);
+			$(xml).find("FileData").each(function(i){
+				var fileName =  $(this).children("FileName").text();
+				var fileCreate = $(this).children("FileCreate").text();
+				var fileOwner = $(this).children("FileSize").text();
+				var fileType = $(this).children("FileType").text();
+				var htmlstring = "<tr id=\"sfile"+i+"\" url=\"" + filePath +"\" filename=\"" + fileName + "\">";
+										
+				htmlstring = htmlstring+"<td class=\"filename\">";
+				if(fileType == "file")
+				{
+						htmlstring = htmlstring + "<a href=\"javascript:downloadFile('"+currentUrlPath+fileName+"');\"><img class=\"fileIcon\" src =\"FileIcon.png\" alt=\"*\"/>" + fileName + "</a>";
+				}											
+				else
+				htmlstring +=  "<a href=\"javascript:initTable('"+filePath+fileName+"/')\"><img class=\"fileIcon\" src =\"FolderIcon.png\" alt=\"*\"/>" + fileName + "</a>";
+				htmlstring += "</td>";
+				htmlstring +=  "<td class=\"fileLastMod\">"+fileCreate+"</td>";
+                
+				htmlstring += "<td class=\"filSize\" align=\"right\">"  ;
+                if(fileType == "file")
+                htmlstring += fileOwner ;
+                
+				if(fileType == "file")
+				htmlstring += "&nbsp <img style=\"display:;\" class=\"downloadIcon\" src=\"downloadIcon.png\" alt=\"d\" onclick=\"downloadFile('"+currentUrlPath+fileName+"');\" />&nbsp";
+				else
+				htmlstring += "&nbsp--";	
+				htmlstring += "<img class = \"deleteIcon\" src=\"deleteIcon.png\" alt=\"x\" title=\"Delete this file\" onclick=\"deleteFile('#sfile"+i+"');\" =\"cursor:pointer;\" />";
+				htmlstring += "</tr>";
+				
+				$("#fileList").append(htmlstring);
+			});
+			},
+   					
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				alert( "Deleted files: " + $(this.fileEl).attr("filename"));
+                initTable("/");
+			}
+		});
+		}
+		
+		window.onload = function() {
+            $.ajaxSetup({cache:false});
+            currentUrlPath = getCookie(cookieName);
+            initTable(currentUrlPath);
+		}
+		
+		function upFolder()
+		{
+			if(currentUrlPath.length == 1)
+			return;
+			var pathString = currentUrlPath.substring(0,currentUrlPath.length-1);
+			var index = pathString.lastIndexOf("/");
+			var upPathString = pathString.substring(0,index+1);
+			initTable(upPathString);
+		}
+
+
+
+				
+
+	</script>
+</head>
+<body>
+<div id="allWrapper">
+	<div id="headerWraper">
+		<div id="headerHighlight" >
+		<div id="header">
+		
+			<div class="logo">
+				<img src="icon57.png" alt="icon57" width="57" height="57"/>
+				<h1>我的文档</h1>
+  			</div>
+
+	  		  <div class="urlDiv">
+     				<div class="outer">
+      				  <div class="inner">
+          			  <p id="documentPath222">请稍等...</p>
+       				 </div>
+    			 </div>
+   			 </div>
+		</div>
+		</div>
+	</div>
+
+	<div id="pageContentWraper">
+		<div id="pageContent">
+			
+			<div id="browseContentWraper">
+				<div id="browseContnent">
+				 	
+				
+					<table class="filesTable" width="100%" cellpadding="3px" cellspacing="0px">
+            			
+           <thead>
+                			<tr>
+                    			<td class="fileName" align="left">
+                    				<a href="javascript:upFolder();" title="Go up a folder level">
+                    					<img style="margin-left:-3px; margin-top:0px; vertical-align:bottom;" src="folderUp.png"/>
+                    				</a>
+                    				&nbsp;名称
+                    				</td>
+                    			<td class="fileLastMod" align="left">修改时间</td>
+                    			<td class="fileSize" align="right" style="padding-right:30px;">大小</td>
+                			</tr>
+            			</thead>
+            			<tbody id="fileList">
+            				<tr>
+                   				<td class="fileName" height="3px"></td>
+                   				<td class="fileLastMod"></td>
+                   				<td class="fileSize" align="right"></td>
+                			</tr>
+            				
+          				
+            		 	</tbody>
+                        
+            		</table>
+				</div>
+			</div>
+			
+			<div id="sideTools">
+				
+				<div class="toolsBox">
+					<form method="post" id="form1" enctype="multipart/form-data" action="/">
+						<div class="uploadTitle">上传</div>
+           				<div class="uploadBox">
+					  		<div id="degradedUploadUI" style="display: none;">
+           			 			<input name="nameFileUpload1" type="file" id="idFileUpload1" class="pageTextBox" />
+	        					<button type="submit">上传</button>
+							</div>
+
+					 		 <div id="flashUploadUI">
+								<div>
+									<span>
+										<span id="multiUploadSWFPlaceholder">
+											<div>Flash Player没有安装或者不可用，请安装Flash Player确保可用。</div>
+											<div class="uploadBox">
+												<input name="UTK" type="hidden" id="UTK" value="" />
+												<input name="nameFileUpload1" type="file" id="idFileUpload1" class="pageTextBox" />
+												<button type="submit" style="padding: 3px;">
+														上传
+												</button>
+											</div>
+										</span>
+									</span>
+									<span>
+										<img id="btnCancelMultiUpload" src="cancelUploads.png" style="display: none;" />
+        							</span>
+								</div>
+					  		</div>
+          				</div>
+          			</form>
+				</div>
+				<div class="toolsBox">
+					<div class="uploadTitle">创建文件夹</p></div>
+           			<div class="uploadBox">
+           				<span style="padding-top: 2px;">
+           					<input id="createFolderText" name="nameFileUpload1" type="text" class="pageTextBox" style="vertical-align: top;"/>
+           				</span>
+           				<span>
+           					<img id="btnCancelMultiUpload" onclick="createFolder();" src="createFolder.png" style="padding-top: -4px; vertical-align: top;" /> 
+  						</span>
+           			</div>
+           			<div id="createFolderMsg" class="cfmessage"></div>
+				</div>		
+
+			</div>
+			
+		</div>
+		<div id="footerPlaceholder"/></div>
+	</div>
+</div>
+
+
+
+</body>
+</html>
